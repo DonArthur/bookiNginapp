@@ -1,0 +1,56 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  bookings  Booking[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Property {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  pricePerNight Decimal  @db.Decimal(12, 2) @map("price_per_night")
+  totalRooms  Int       @map("total_rooms")
+  bookings    Booking[]
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("properties")
+}
+
+model Booking {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  propertyId String   @map("property_id")
+  checkInDate  DateTime @db.Date @map("check_in_date")
+  checkOutDate DateTime @db.Date @map("check_out_date")
+  status     BookingStatus @default(PENDING)
+  totalPrice Decimal  @db.Decimal(12, 2) @map("total_price")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
