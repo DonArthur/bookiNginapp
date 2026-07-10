@@ -1,4 +1,6 @@
 import Fastify from "fastify";
+import propertyRoutes from "./routes/properties.js";
+import bookingRoutes from "./routes/bookings.js";
 
 const fastify = Fastify({
     logger: true, // Automatically logs requests and responses
@@ -7,6 +9,9 @@ const fastify = Fastify({
 fastify.get("/health", async (request, reply) => {
     return { status: "OK", message: "bookiNginapp backend is running!" };
 });
+
+fastify.register(propertyRoutes);
+fastify.register(bookingRoutes);
 
 const start = async () => {
     try {
