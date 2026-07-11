@@ -1,18 +1,30 @@
 import { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 import { prisma } from '../db.js';
 
-interface BookingRequest {
-    propertyId: string;
-    userId: string;
-    checkInDate: string;
-    checkOutDate: string;
-}
+const bookingSchema = z.object({
+    propertyId: z.guid({ error: 'Invalid property ID format'}),
+    userId: z.guid({ error: 'Invalid user ID format'}),
+    checkInDate: z.coerce.date(),
+    checkOutDate: z.coerce.date(),
+}).refine((data) => data.checkInDate < data.checkOutDate, {
+    message: 'Check-in date must be before check-out date',
+    path: ['checkOutDate'],
+});
 
 export default async function bookingRoutes(fastify: FastifyInstance) {
     fastify.post('/api/bookings', async (request, reply) => {
-        const { propertyId, userId, checkInDate, checkOutDate } = request.body as BookingRequest;
-        const checkIn = new Date(checkInDate);
-        const checkOut = new Date(checkOutDate);
+        const validation = bookingSchema.safeParse(request.body);
+
+        if (!validation.success) {
+            return reply.status(400).send({
+                error: 'Validation failed',
+                details: z.flattenError(validation.error).fieldErrors,
+            });
+        }
+
+        const { propertyId, userId, checkInDate: checkIn, checkOutDate: checkOut } = validation.data;
+
         try {
             const result = await prisma.$transaction(async (tx) => {
                 const property = await tx.property.findUnique({
