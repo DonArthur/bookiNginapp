@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import propertyRoutes from "./routes/properties.js";
 import bookingRoutes from "./routes/bookings.js";
+import userRoutes from "./routes/users.js";
 
 const fastify = Fastify({
     logger: true, // Automatically logs requests and responses
@@ -12,6 +13,7 @@ fastify.get("/health", async (request, reply) => {
 
 fastify.register(propertyRoutes);
 fastify.register(bookingRoutes);
+fastify.register(userRoutes);
 
 const start = async () => {
     try {
